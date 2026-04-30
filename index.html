@@ -195,10 +195,7 @@
 
 <!-- HEADER -->
 <div class="header">
-  <div style="display:flex; justify-content:space-between; align-items:center;">
-    <h1>Phiếu khảo sát nghiên cứu</h1>
-    <span id="timerDisplay" style="font-size:.82rem; opacity:.85; font-family:monospace; background:rgba(255,255,255,.15); padding:3px 10px; border-radius:4px;">00:00</span>
-  </div>
+  <h1>Phiếu khảo sát nghiên cứu</h1>
   <div class="progress-bar-wrap">
     <div class="progress-bar-fill" id="progressBar" style="width:0%"></div>
   </div>
@@ -227,7 +224,6 @@
     <div class="note-box">
       <p style="margin-bottom:6px;"><strong>Bảo mật và Ẩn danh:</strong> Mọi thông tin Anh/Chị cung cấp đều được ẩn danh hoàn toàn và chỉ phục vụ mục đích phân tích thống kê trong nghiên cứu học thuật.</p>
       <p><strong>Thời gian thực hiện:</strong> Khảo sát dự kiến mất khoảng <strong>5-8 phút</strong> để hoàn thành. Trong lúc nhấn "Nộp khảo sát", hệ thống có thể load lâu một chút (<1 phút), mong Anh/Chị thông cảm và đợi một lúc.</p>
-      <p><strong>Thù lao:</strong> Mỗi phiếu khảo sát hợp lệ sẽ được nhận <strong>10.000 VND</strong> qua chuyển khoản ngân hàng trong vòng 3 ngày làm việc.</p>
     </div>
 
     <p style="font-weight:600; margin-bottom:8px;">Phiếu khảo sát gồm 2 phần:</p>
@@ -353,29 +349,6 @@
       <div class="error-msg" id="err-purchase_intent">Vui lòng chọn dự định mua xe</div>
     </div>
 
-    <div class="field-group" style="background:#f8fafc; border-color:#c8d8e8;">
-      <label style="color:#1a4e8a;">Thông tin nhận thù lao khảo sát (10.000 VND)</label>
-      <p style="font-size:.82rem; color:#888; margin-bottom:12px; line-height:1.5;">Để cảm ơn sự tham gia của Anh/Chị, chúng tôi sẽ gửi <strong style="color:#1a202c;">10.000 VND</strong> qua chuyển khoản ngân hàng.</p>
-      <div style="margin-bottom:10px;">
-        <label style="font-size:.84rem; font-weight:500; color:#555; margin-bottom:4px;">Tên ngân hàng</label>
-        <input type="text" id="bank_name" placeholder="Ví dụ: Vietcombank, MB Bank, Techcombank..." style="width:100%; padding:9px 12px; border:1.5px solid #d0d7e0; border-radius:6px; font-size:.9rem; background:white;">
-        <div class="error-msg" id="err-bank_name">Vui lòng nhập tên ngân hàng</div>
-      </div>
-      <div style="margin-bottom:10px;">
-        <label style="font-size:.84rem; font-weight:500; color:#555; margin-bottom:4px;">Số tài khoản</label>
-        <input type="text" id="bank_account" placeholder="Nhập số tài khoản ngân hàng" style="width:100%; padding:9px 12px; border:1.5px solid #d0d7e0; border-radius:6px; font-size:.9rem; background:white;">
-        <div class="error-msg" id="err-bank_account">Vui lòng nhập số tài khoản</div>
-      </div>
-      <div style="margin-bottom:12px;">
-        <label style="font-size:.84rem; font-weight:500; color:#555; margin-bottom:4px;">Tên chủ tài khoản (hoặc nickname)</label>
-        <input type="text" id="bank_holder" placeholder="Nhập tên chủ tài khoản" style="width:100%; padding:9px 12px; border:1.5px solid #d0d7e0; border-radius:6px; font-size:.9rem; background:white;">
-        <div class="error-msg" id="err-bank_holder">Vui lòng nhập tên chủ tài khoản</div>
-      </div>
-      <div style="background:#fff8e6; border:1px solid #e8d5a0; border-radius:5px; padding:10px 14px; font-size:.82rem; color:#6b5a1e; line-height:1.6;">
-        <strong>Lưu ý:</strong> Thù lao 10.000 VND sẽ được chuyển khoản trong vòng <strong>3 ngày làm việc</strong> sau khi phần trả lời được xác nhận đạt điều kiện (trả lời đầy đủ tất cả các câu hỏi và không có dấu hiệu trả lời ngẫu nhiên). Mỗi người chỉ được tham gia khảo sát <strong>một lần</strong>.
-      </div>
-    </div>
-
     <div class="nav-row">
       <button class="btn btn-secondary" onclick="renderCBC(SETS_PER_BLOCK); goTo('sec-cbc');">Quay lại</button>
       <button class="btn btn-primary" id="submit-btn" onclick="submitDemo()">Nộp khảo sát</button>
@@ -389,8 +362,6 @@
     <h2 style="color:#1a4e8a; margin-bottom:14px;">Cảm ơn Anh/Chị rất nhiều!</h2>
     <p>Câu trả lời của Anh/Chị đã được ghi lại thành công.</p>
     <p style="margin-top:8px;">Phản hồi này đóng góp trực tiếp cho nghiên cứu về xu hướng sử dụng xe máy điện của sinh viên tại Hà Nội. Xin trân trọng cảm ơn sự hỗ trợ quý báu của Anh/Chị!</p>
-    <p style="margin-top:14px; font-size:.9rem; color:#1a4e8a; font-weight:600;">Thời gian hoàn thành: <span id="final-duration"></span></p>
-    <p style="margin-top:8px; font-size:.88rem; color:#555;">Thù lao <strong>10.000 VND</strong> sẽ được chuyển khoản đến tài khoản ngân hàng của Anh/Chị trong vòng <strong>3 ngày làm việc</strong> sau khi phần trả lời được xác nhận đạt điều kiện.</p>
     <p style="margin-top:16px; font-size:.82rem; color:#bbb;">Respondent ID: <span id="resp-id"></span></p>
   </div>
 </div>
@@ -433,27 +404,7 @@ const state = {
   choices: {},        // keyed by local index 1-8
   currentSet: 1,
   respondentId: Date.now() + '-' + Math.random().toString(36).substr(2,6),
-  startTime: null,
-  timerInterval: null,
 };
-
-// ── Timer ────────────────────────────────────────────────
-function startTimer() {
-  if (state.startTime) return;
-  state.startTime = Date.now();
-  state.timerInterval = setInterval(function() {
-    var elapsed = Math.floor((Date.now() - state.startTime) / 1000);
-    var m = String(Math.floor(elapsed / 60)).padStart(2, '0');
-    var s = String(elapsed % 60).padStart(2, '0');
-    document.getElementById('timerDisplay').textContent = m + ':' + s;
-  }, 1000);
-}
-function stopTimer() { if (state.timerInterval) clearInterval(state.timerInterval); }
-function getDurationSeconds() { return state.startTime ? Math.floor((Date.now() - state.startTime) / 1000) : 0; }
-function formatDuration(sec) {
-  var m = Math.floor(sec / 60), s = sec % 60;
-  return m === 0 ? s + ' giây' : m + ' phút ' + s + ' giây';
-}
 
 // ── Block assignment: client-side randomization ──────────
 // Simple 50/50 random assignment. With n=250, the split will
@@ -461,7 +412,7 @@ function formatDuration(sec) {
 // Block is fixed in state before any questions are shown,
 // ensuring data integrity: responses always match the block label.
 
-var GAS_URL = 'https://script.google.com/macros/s/AKfycbx59zUT1GS0HvVQeQGWWfOpv0kzb4KjYiMJFseZe51wMAtDqkVSMHt0Sl2l5nLX_6p45Q/exec';
+var GAS_URL = 'https://script.google.com/macros/s/AKfycbwd6tydiLvbndDKwP2NR8-ZZcY39HmmEl96Errr9re6hFqWhAKWeiI8kBGGgjrIXqb9PQ/exec';
 
 function assignBlock() {
   state.block = Math.random() < 0.5 ? 1 : 2;
@@ -469,7 +420,6 @@ function assignBlock() {
 
 function startSurvey() {
   assignBlock();
-  startTimer();
   goTo('sec-cbc');
   renderCBC(1);
 }
@@ -638,15 +588,6 @@ function submitDemo() {
     if (!val) { err.style.display = 'block'; valid = false; }
     else { err.style.display = 'none'; state.demographics[f.id] = val; }
   });
-
-  // Validate bank fields
-  ['bank_name','bank_account','bank_holder'].forEach(function(fid) {
-    var val = document.getElementById(fid).value.trim();
-    var err = document.getElementById('err-' + fid);
-    if (!val) { err.style.display = 'block'; valid = false; }
-    else { err.style.display = 'none'; state.demographics[fid] = val; }
-  });
-
   if (!valid) return;
   submitSurvey();
 }
@@ -655,12 +596,9 @@ function submitDemo() {
 function buildPayload() {
   var d = state.demographics;
   var sets = BLOCKS[state.block];
-  var duration = getDurationSeconds();
   var row = {
     respondent_id:    state.respondentId,
     timestamp:        new Date().toISOString(),
-    duration_seconds: duration,
-    duration_text:    formatDuration(duration),
     block:            state.block,
     gender:           d.gender || '',
     study_year:       d.study_year || '',
@@ -670,9 +608,6 @@ function buildPayload() {
     main_transport:   d.main_transport || '',
     ev_experience:    d.ev_experience || '',
     purchase_intent:  d.purchase_intent || '',
-    bank_name:        d.bank_name || '',
-    bank_account:     d.bank_account || '',
-    bank_holder:      d.bank_holder || '',
   };
   // Map local choices (1-8) to actual set IDs
   for (var i = 1; i <= SETS_PER_BLOCK; i++) {
@@ -684,7 +619,6 @@ function buildPayload() {
 
 // ── Submit Survey ────────────────────────────────────────
 async function submitSurvey() {
-  stopTimer();
   var btn = document.getElementById('submit-btn');
   btn.disabled = true;
   btn.innerHTML = '<span class="spin-circle"></span> Đang gửi...';
@@ -703,7 +637,6 @@ async function submitSurvey() {
   }
 
   document.getElementById('resp-id').textContent = state.respondentId;
-  document.getElementById('final-duration').textContent = formatDuration(getDurationSeconds());
   goTo('sec-thanks');
 }
 </script>
