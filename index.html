@@ -1,52 +1,711 @@
-const SHEET_NAME = 'Responses';
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Khảo sát E2W – Lựa chọn Xe Máy</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
-const HEADERS = [
-  'respondent_id', 'timestamp', 'duration_seconds', 'duration_text', 'block',
-  'gender', 'study_year', 'residence', 'monthly_expense',
-  'daily_distance', 'main_transport', 'ev_experience', 'purchase_intent',
-  'bank_name', 'bank_account', 'bank_holder',
-  'set1','set2','set3','set4','set5','set6','set7','set8',
-  'set9','set10','set11','set12','set13','set14','set15','set16',
-];
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f4f6f9;
+      color: #1a202c;
+      min-height: 100vh;
+    }
 
-function doPost(e) {
+    /* ── Header ── */
+    .header {
+      background: #1a4e8a;
+      color: white;
+      padding: 18px 24px 14px;
+      position: sticky; top: 0; z-index: 100;
+      box-shadow: 0 2px 6px rgba(0,0,0,.2);
+    }
+    .header h1 { font-size: 1rem; font-weight: 600; letter-spacing: .02em; }
+    .progress-bar-wrap { margin-top: 10px; background: rgba(255,255,255,.25); border-radius: 99px; height: 5px; }
+    .progress-bar-fill { height: 5px; border-radius: 99px; background: #5cb85c; transition: width .4s ease; }
+    .progress-label { font-size: .75rem; opacity: .8; margin-top: 5px; }
+
+    /* ── Sections ── */
+    .section { display: none; padding-bottom: 40px; }
+    .section.active { display: block; }
+
+    /* ── Cards ── */
+    .card {
+      max-width: 720px; margin: 32px auto; background: white;
+      border-radius: 10px; padding: 36px 32px;
+      box-shadow: 0 1px 8px rgba(0,0,0,.07);
+      border: 1px solid #e8ecf1;
+    }
+    @media (max-width: 640px) { .card { margin: 16px 12px; padding: 24px 18px; } }
+
+    .card h2 { font-size: 1.2rem; color: #1a202c; margin-bottom: 16px; font-weight: 700; }
+    .card p { line-height: 1.75; color: #444; margin-bottom: 10px; font-size: .93rem; }
+
+    /* ── Info blocks ── */
+    .info-block {
+      background: #f8fafc; border-left: 3px solid #1a4e8a;
+      border-radius: 0 6px 6px 0; padding: 14px 16px; margin: 16px 0;
+    }
+    .info-block p { margin-bottom: 6px; }
+    .info-block strong { color: #1a202c; }
+
+    .note-box {
+      background: #f8fafc; border: 1px solid #dce3eb;
+      border-radius: 6px; padding: 12px 16px; margin: 14px 0;
+      font-size: .88rem; color: #555; line-height: 1.6;
+    }
+
+    .consent-box {
+      background: #f0f4ff; border: 1px solid #b8ccee;
+      border-radius: 6px; padding: 14px 16px; margin: 18px 0;
+      font-size: .9rem; color: #1e3a6e; line-height: 1.6;
+    }
+
+    /* ── Demographics ── */
+    .demo-card { max-width: 720px; margin: 32px auto; }
+
+    .field-group {
+      background: white; border: 1px solid #e8ecf1; border-radius: 8px;
+      padding: 18px 20px; margin-bottom: 14px;
+    }
+    .field-group label {
+      display: block; font-size: .9rem; font-weight: 600;
+      color: #1a202c; margin-bottom: 10px; line-height: 1.5;
+    }
+    .radio-group { display: flex; flex-wrap: wrap; gap: 8px; }
+    .radio-btn {
+      padding: 8px 18px; border: 1.5px solid #d0d7e0; border-radius: 6px;
+      cursor: pointer; font-size: .88rem; transition: all .15s; user-select: none;
+      background: #fafbfc; color: #333;
+    }
+    .radio-btn:hover { border-color: #7aadda; background: #f0f6ff; }
+    .radio-btn.selected { background: #1a4e8a; color: white; border-color: #1a4e8a; }
+    .error-msg { color: #c53030; font-size: .82rem; margin-top: 8px; display: none; }
+
+    /* ── CBC Choice Set ── */
+    .cbc-card {
+      max-width: 820px; margin: 24px auto; background: white;
+      border-radius: 10px; padding: 28px 24px;
+      box-shadow: 0 1px 8px rgba(0,0,0,.07);
+      border: 1px solid #e8ecf1;
+    }
+    @media (max-width: 640px) { .cbc-card { margin: 16px 12px; padding: 20px 14px; } }
+    .cbc-card h3 { font-size: .9rem; color: #888; margin-bottom: 4px; font-weight: 400; }
+    .cbc-card h2 { font-size: 1.1rem; color: #1a202c; margin-bottom: 6px; font-weight: 700; }
+
+    .cbc-progress {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: .82rem; color: #888; margin-bottom: 4px;
+    }
+    .cbc-progress-bar { height: 3px; background: #e2e8f0; border-radius: 99px; margin-bottom: 18px; }
+    .cbc-progress-fill { height: 3px; border-radius: 99px; background: #1a4e8a; transition: width .3s; }
+
+    .cbc-scenario {
+      background: #f0faf0; border: 1px solid #c8e6c8; border-radius: 6px;
+      padding: 12px 16px; margin-bottom: 16px; font-size: .9rem; color: #2d5a2d; line-height: 1.6;
+    }
+
+    .cbc-question {
+      background: #fafbfc; border: 1px solid #e2e8f0; border-radius: 6px;
+      padding: 10px 16px; margin-bottom: 16px; font-size: .9rem; color: #444;
+    }
+
+    .options-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+    }
+    @media (max-width: 700px) { .options-grid { grid-template-columns: 1fr; } }
+
+    .option-card {
+      border: 2px solid #d0d7e0; border-radius: 8px;
+      overflow: hidden; cursor: pointer; transition: all .2s;
+      background: white;
+    }
+    .option-card:hover { border-color: #7aadda; box-shadow: 0 3px 12px rgba(26,78,138,.1); }
+    .option-card.selected { border-color: #1a4e8a; background: #f5f8ff; box-shadow: 0 0 0 2px rgba(26,78,138,.2); }
+
+    .option-header {
+      padding: 10px 14px; font-weight: 700; font-size: .88rem;
+      text-align: center; border-bottom: 1px solid #e2e8f0;
+      background: #eef3fa; color: #1a4e8a;
+    }
+
+    .option-c .option-header { background: #f8f8f8; color: #666; }
+
+    .attr-row {
+      padding: 9px 14px;
+      border-bottom: 1px solid #f0f2f5;
+    }
+    .attr-row:last-of-type { border-bottom: none; }
+    .attr-label { display: block; color: #888; font-size: .76rem; margin-bottom: 2px; }
+    .attr-value { display: block; font-weight: 700; color: #1a202c; font-size: .95rem; }
+
+    .option-c-body { text-align: center; padding: 32px 16px; }
+    .option-c-body span { font-size: .88rem; color: #666; line-height: 1.5; }
+
+    .check-circle {
+      width: 22px; height: 22px; border-radius: 50%;
+      border: 2px solid #cbd5e0; margin: 10px auto; transition: all .2s;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .option-card.selected .check-circle { background: #1a4e8a; border-color: #1a4e8a; }
+    .check-circle::after { content: '\2713'; color: white; font-size: .7rem; opacity: 0; }
+    .option-card.selected .check-circle::after { opacity: 1; }
+
+    /* ── Footnotes under choice set ── */
+    .cbc-footnotes {
+      margin-top: 16px; padding-top: 14px; border-top: 1px solid #e8ecf1;
+    }
+    .cbc-footnote {
+      font-size: .8rem; color: #777; line-height: 1.55; margin-bottom: 8px;
+      padding-left: 10px; border-left: 2px solid #dce3eb;
+    }
+
+    /* ── Buttons ── */
+    .btn {
+      padding: 11px 32px; border: none; border-radius: 6px;
+      font-size: .93rem; font-weight: 600; cursor: pointer; transition: all .15s;
+    }
+    .btn-primary { background: #1a4e8a; color: white; }
+    .btn-primary:hover { background: #163f70; }
+    .btn-primary:disabled { background: #aab8ca; cursor: not-allowed; }
+    .btn-secondary { background: white; color: #1a4e8a; border: 1.5px solid #1a4e8a; }
+    .btn-secondary:hover { background: #f0f6ff; }
+
+    .nav-row { display: flex; justify-content: space-between; align-items: center; margin-top: 22px; flex-wrap: wrap; gap: 10px; }
+    .nav-row-center { display: flex; justify-content: center; margin-top: 28px; }
+
+    /* ── Thank you ── */
+    .thankyou-card {
+      max-width: 580px; margin: 60px auto; background: white;
+      border-radius: 10px; padding: 48px 36px; text-align: center;
+      box-shadow: 0 1px 8px rgba(0,0,0,.07); border: 1px solid #e8ecf1;
+    }
+    .thankyou-card h2 { font-size: 1.3rem; color: #1a4e8a; margin-bottom: 12px; }
+    .thankyou-card p { color: #555; line-height: 1.7; font-size: .93rem; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spin-circle { width: 18px; height: 18px; border: 2.5px solid #ddd; border-top-color: #1a4e8a; border-radius: 50%; animation: spin .7s linear infinite; display: inline-block; vertical-align: middle; margin-right: 8px; }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div style="display:flex; justify-content:space-between; align-items:center;">
+    <h1>Phiếu khảo sát nghiên cứu</h1>
+    <span id="timerDisplay" style="font-size:.82rem; opacity:.85; font-family:monospace; background:rgba(255,255,255,.15); padding:3px 10px; border-radius:4px;">00:00</span>
+  </div>
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-fill" id="progressBar" style="width:0%"></div>
+  </div>
+  <div class="progress-label" id="progressLabel">Giới thiệu</div>
+</div>
+
+<!-- ══════════ SECTION 1: INTRO ══════════ -->
+<div class="section active" id="sec-intro">
+  <div class="card">
+
+    <h2 style="text-align:center; font-size:1.15rem; line-height:1.5; margin-bottom:22px;">
+      Các yếu tố ảnh hưởng đến ý định sử dụng<br>xe máy điện của sinh viên tại Hà Nội
+    </h2>
+
+    <p>Kính gửi Anh/Chị,</p>
+    <p>Tôi là <strong>Điều Ngọc Khuê</strong>, hiện đang là sinh viên tại <strong>Đại học Kinh tế Quốc dân</strong>. Tôi đang thực hiện một dự án nghiên cứu khoa học nhằm tìm hiểu các yếu tố ảnh hưởng đến ý định chuyển đổi sang xe máy điện (E2W) của sinh viên đại học tại Hà Nội, sử dụng phương pháp mô hình lựa chọn rời rạc (discrete choice model).</p>
+    <p>Nghiên cứu này được thực hiện dưới sự hướng dẫn của <strong>thày Hà Minh Hoàng</strong> (Khoa Khoa học dữ liệu và Trí tuệ nhân tạo, trường Công nghệ NEU).</p>
+
+    <div class="info-block">
+      <p style="font-weight:700; color:#1a4e8a; margin-bottom:6px;">Bối cảnh và Mục tiêu nghiên cứu</p>
+      <p style="font-size:.92rem;">Trong bối cảnh Hà Nội đang đẩy mạnh lộ trình chuyển đổi giao thông xanh và giảm phát thải khí nhà kính, xe máy điện được kỳ vọng trở thành một giải pháp thay thế bền vững cho xe máy xăng truyền thống. Nghiên cứu này nhằm <strong>đo lường mức đánh đổi (trade-off)</strong> mà sinh viên thực hiện giữa các thuộc tính xe và các chính sách khuyến khích, từ đó cung cấp bằng chứng thực nghiệm để đề xuất các chiến lược thúc đẩy giao thông đô thị bền vững tại Việt Nam.</p>
+    </div>
+
+    <p style="font-weight:600; margin-bottom:8px;">Khi Anh/Chị đồng ý tham gia khảo sát, vui lòng lưu ý:</p>
+
+    <div class="note-box">
+      <p style="margin-bottom:6px;"><strong>Bảo mật và Ẩn danh:</strong> Mọi thông tin Anh/Chị cung cấp đều được ẩn danh hoàn toàn và chỉ phục vụ mục đích phân tích thống kê trong nghiên cứu học thuật.</p>
+      <p><strong>Thời gian thực hiện:</strong> Khảo sát dự kiến mất khoảng <strong>5-8 phút</strong> để hoàn thành. Trong lúc nhấn "Nộp khảo sát", hệ thống có thể load lâu một chút (<1 phút), mong Anh/Chị thông cảm và đợi một lúc.</p>
+      <p><strong>Thù lao:</strong> Mỗi phiếu khảo sát hợp lệ sẽ được nhận <strong>10.000 VND</strong> qua chuyển khoản ngân hàng trong vòng 3 ngày làm việc.</p>
+    </div>
+
+    <p style="font-weight:600; margin-bottom:8px;">Phiếu khảo sát gồm 2 phần:</p>
+    <div class="note-box">
+      <p style="margin-bottom:4px;"><strong>Phần 1:</strong> 8 tình huống lựa chọn giữa xe máy điện, xe máy xăng và không chọn cả hai</p>
+      <p><strong>Phần 2:</strong> Thông tin chung và thói quen di chuyển của Anh/Chị</p>
+    </div>
+
+    <div class="note-box" style="background:#f0f4ff; border-color:#b8ccee; color:#1e3a6e;">
+      <strong>Lưu ý:</strong> Trong Phần 1, mỗi tình huống sẽ trình bày hai phương tiện giả định với các đặc điểm khác nhau. Không có câu trả lời đúng hay sai. Anh/Chị chỉ cần chọn phương án mà mình thấy <strong>phù hợp nhất</strong> với nhu cầu thực tế.
+    </div>
+
+    <div class="consent-box">
+      Bằng việc nhấn vào nút <strong>"Bắt đầu khảo sát"</strong> dưới đây, Anh/Chị xác nhận đã đọc, hiểu các thông tin trên và <strong>đồng ý tham gia</strong> vào nghiên cứu này.
+    </div>
+
+    <p style="text-align:center; font-size:.92rem; color:#555; font-style:italic; margin-bottom:4px;">Sự đóng góp của Anh/Chị có ý nghĩa rất lớn đối với thành công của nghiên cứu.</p>
+    <p style="text-align:center; font-size:.92rem; color:#555; font-weight:600; margin-bottom:24px;">Xin trân trọng cảm ơn thời gian và sự hỗ trợ quý báu của Anh/Chị!</p>
+
+    <div class="nav-row-center">
+      <button class="btn btn-primary" onclick="startSurvey()" style="padding:13px 48px; font-size:1rem;">Bắt đầu khảo sát</button>
+    </div>
+
+    <p style="text-align:center; margin-top:22px; font-size: .82rem; color:#999;">
+      Mọi thắc mắc liên quan đến nghiên cứu, vui lòng liên hệ: <a href="mailto:dieungockhue@gmail.com" style="color:#1a4e8a;">dieungockhue@gmail.com</a>
+    </p>
+  </div>
+</div>
+
+<!-- ══════════ SECTION 2: CBC ══════════ -->
+<div class="section" id="sec-cbc">
+  <div id="cbc-container"></div>
+</div>
+
+<!-- ══════════ SECTION 3: DEMOGRAPHICS ══════════ -->
+<div class="section" id="sec-demo">
+  <div class="card demo-card">
+    <h2>Phần 2: Thông tin chung</h2>
+    <p style="font-size:.88rem; color:#777; margin-bottom:20px;">Vui lòng cung cấp một số thông tin cá nhân và thói quen di chuyển của Anh/Chị.</p>
+
+    <div class="field-group">
+      <label>1. Giới tính</label>
+      <div class="radio-group" id="gender">
+        <span class="radio-btn" data-val="Nam" onclick="selectRadio('gender',this)">Nam</span>
+        <span class="radio-btn" data-val="Nữ" onclick="selectRadio('gender',this)">Nữ</span>
+        <span class="radio-btn" data-val="Khác" onclick="selectRadio('gender',this)">Khác</span>
+      </div>
+      <div class="error-msg" id="err-gender">Vui lòng chọn giới tính</div>
+    </div>
+
+    <div class="field-group">
+      <label>2. Bạn hiện là sinh viên năm thứ mấy?</label>
+      <div class="radio-group" id="study_year">
+        <span class="radio-btn" data-val="Năm 1" onclick="selectRadio('study_year',this)">Năm 1</span>
+        <span class="radio-btn" data-val="Năm 2" onclick="selectRadio('study_year',this)">Năm 2</span>
+        <span class="radio-btn" data-val="Năm 3" onclick="selectRadio('study_year',this)">Năm 3</span>
+        <span class="radio-btn" data-val="Năm 4" onclick="selectRadio('study_year',this)">Năm 4</span>
+        <span class="radio-btn" data-val="Năm 5+ hoặc Sau đại học" onclick="selectRadio('study_year',this)">Năm 5+ / Sau đại học</span>
+      </div>
+      <div class="error-msg" id="err-study_year">Vui lòng chọn năm học</div>
+    </div>
+
+    <div class="field-group">
+      <label>3. Hiện tại bạn đang sinh sống tại:</label>
+      <div class="radio-group" id="residence">
+        <span class="radio-btn" data-val="Ký túc xá" onclick="selectRadio('residence',this)">Ký túc xá</span>
+        <span class="radio-btn" data-val="Nhà trọ/Chung cư mini" onclick="selectRadio('residence',this)">Nhà trọ / Chung cư mini</span>
+        <span class="radio-btn" data-val="Ở cùng gia đình/người thân" onclick="selectRadio('residence',this)">Ở cùng gia đình / người thân</span>
+      </div>
+      <div class="error-msg" id="err-residence">Vui lòng chọn nơi ở hiện tại</div>
+    </div>
+
+    <div class="field-group">
+      <label>4. Tổng chi tiêu hàng tháng của bạn:</label>
+      <div class="radio-group" id="monthly_expense">
+        <span class="radio-btn" data-val="Dưới 3 triệu VNĐ" onclick="selectRadio('monthly_expense',this)">Dưới 3 triệu</span>
+        <span class="radio-btn" data-val="Từ 3–5 triệu VNĐ" onclick="selectRadio('monthly_expense',this)">3 – 5 triệu</span>
+        <span class="radio-btn" data-val="Từ trên 5–8 triệu VNĐ" onclick="selectRadio('monthly_expense',this)">Trên 5 – 8 triệu</span>
+        <span class="radio-btn" data-val="Trên 8 triệu VNĐ" onclick="selectRadio('monthly_expense',this)">Trên 8 triệu</span>
+      </div>
+      <div class="error-msg" id="err-monthly_expense">Vui lòng chọn mức chi tiêu</div>
+    </div>
+
+    <div class="field-group">
+      <label>5. Quãng đường bạn di chuyển trung bình mỗi ngày (cả đi và về) là bao nhiêu?</label>
+      <div class="radio-group" id="daily_distance">
+        <span class="radio-btn" data-val="Dưới 5 km" onclick="selectRadio('daily_distance',this)">Dưới 5 km</span>
+        <span class="radio-btn" data-val="Từ 5–10 km" onclick="selectRadio('daily_distance',this)">5 – 10 km</span>
+        <span class="radio-btn" data-val="Từ 10–20 km" onclick="selectRadio('daily_distance',this)">10 – 20 km</span>
+        <span class="radio-btn" data-val="Trên 20 km" onclick="selectRadio('daily_distance',this)">Trên 20 km</span>
+      </div>
+      <div class="error-msg" id="err-daily_distance">Vui lòng chọn quãng đường di chuyển</div>
+    </div>
+
+    <div class="field-group">
+      <label>6. Phương tiện di chuyển chính của bạn tới trường hiện nay là:</label>
+      <div class="radio-group" id="main_transport">
+        <span class="radio-btn" data-val="Xe máy xăng" onclick="selectRadio('main_transport',this)">Xe máy xăng</span>
+        <span class="radio-btn" data-val="Xe máy điện/Xe đạp điện" onclick="selectRadio('main_transport',this)">Xe máy điện / Xe đạp điện</span>
+        <span class="radio-btn" data-val="Xe buýt" onclick="selectRadio('main_transport',this)">Xe buýt</span>
+        <span class="radio-btn" data-val="Xe ôm công nghệ" onclick="selectRadio('main_transport',this)">Xe ôm công nghệ</span>
+        <span class="radio-btn" data-val="Đi bộ/Khác" onclick="selectRadio('main_transport',this)">Đi bộ / Khác</span>
+      </div>
+      <div class="error-msg" id="err-main_transport">Vui lòng chọn phương tiện chính</div>
+    </div>
+
+    <div class="field-group">
+      <label>7. Bạn đã từng sử dụng xe máy điện chưa?</label>
+      <div class="radio-group" id="ev_experience">
+        <span class="radio-btn" data-val="Chưa từng" onclick="selectRadio('ev_experience',this)">Chưa từng</span>
+        <span class="radio-btn" data-val="Đã từng dùng thử" onclick="selectRadio('ev_experience',this)">Đã từng dùng thử</span>
+        <span class="radio-btn" data-val="Đang sở hữu/sử dụng thường xuyên" onclick="selectRadio('ev_experience',this)">Đang sở hữu / dùng thường xuyên</span>
+      </div>
+      <div class="error-msg" id="err-ev_experience">Vui lòng chọn kinh nghiệm sử dụng xe điện</div>
+    </div>
+
+    <div class="field-group">
+      <label>8. Bạn có dự định mua xe máy mới trong vòng 3 năm tới không?</label>
+      <div class="radio-group" id="purchase_intent">
+        <span class="radio-btn" data-val="Có" onclick="selectRadio('purchase_intent',this)">Có</span>
+        <span class="radio-btn" data-val="Không" onclick="selectRadio('purchase_intent',this)">Không</span>
+      </div>
+      <div class="error-msg" id="err-purchase_intent">Vui lòng chọn dự định mua xe</div>
+    </div>
+
+    <div class="field-group" style="background:#f8fafc; border-color:#c8d8e8;">
+      <label style="color:#1a4e8a;">Thông tin nhận thù lao khảo sát (10.000 VND)</label>
+      <p style="font-size:.82rem; color:#888; margin-bottom:12px; line-height:1.5;">Để cảm ơn sự tham gia của Anh/Chị, chúng tôi sẽ gửi <strong style="color:#1a202c;">10.000 VND</strong> qua chuyển khoản ngân hàng.</p>
+      <div style="margin-bottom:10px;">
+        <label style="font-size:.84rem; font-weight:500; color:#555; margin-bottom:4px;">Tên ngân hàng</label>
+        <input type="text" id="bank_name" placeholder="Ví dụ: Vietcombank, MB Bank, Techcombank..." style="width:100%; padding:9px 12px; border:1.5px solid #d0d7e0; border-radius:6px; font-size:.9rem; background:white;">
+        <div class="error-msg" id="err-bank_name">Vui lòng nhập tên ngân hàng</div>
+      </div>
+      <div style="margin-bottom:10px;">
+        <label style="font-size:.84rem; font-weight:500; color:#555; margin-bottom:4px;">Số tài khoản</label>
+        <input type="text" id="bank_account" placeholder="Nhập số tài khoản ngân hàng" style="width:100%; padding:9px 12px; border:1.5px solid #d0d7e0; border-radius:6px; font-size:.9rem; background:white;">
+        <div class="error-msg" id="err-bank_account">Vui lòng nhập số tài khoản</div>
+      </div>
+      <div style="margin-bottom:12px;">
+        <label style="font-size:.84rem; font-weight:500; color:#555; margin-bottom:4px;">Tên chủ tài khoản (hoặc nickname)</label>
+        <input type="text" id="bank_holder" placeholder="Nhập tên chủ tài khoản" style="width:100%; padding:9px 12px; border:1.5px solid #d0d7e0; border-radius:6px; font-size:.9rem; background:white;">
+        <div class="error-msg" id="err-bank_holder">Vui lòng nhập tên chủ tài khoản</div>
+      </div>
+      <div style="background:#fff8e6; border:1px solid #e8d5a0; border-radius:5px; padding:10px 14px; font-size:.82rem; color:#6b5a1e; line-height:1.6;">
+        <strong>Lưu ý:</strong> Thù lao 10.000 VND sẽ được chuyển khoản trong vòng <strong>3 ngày làm việc</strong> sau khi phần trả lời được xác nhận đạt điều kiện (trả lời đầy đủ tất cả các câu hỏi và không có dấu hiệu trả lời ngẫu nhiên). Mỗi người chỉ được tham gia khảo sát <strong>một lần</strong>.
+      </div>
+    </div>
+
+    <div class="nav-row">
+      <button class="btn btn-secondary" onclick="renderCBC(SETS_PER_BLOCK); goTo('sec-cbc');">Quay lại</button>
+      <button class="btn btn-primary" id="submit-btn" onclick="submitDemo()">Nộp khảo sát</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ SECTION 4: THANK YOU ══════════ -->
+<div class="section" id="sec-thanks">
+  <div class="card" style="max-width:580px; text-align:center; padding:48px 36px;">
+    <h2 style="color:#1a4e8a; margin-bottom:14px;">Cảm ơn Anh/Chị rất nhiều!</h2>
+    <p>Câu trả lời của Anh/Chị đã được ghi lại thành công.</p>
+    <p style="margin-top:8px;">Phản hồi này đóng góp trực tiếp cho nghiên cứu về xu hướng sử dụng xe máy điện của sinh viên tại Hà Nội. Xin trân trọng cảm ơn sự hỗ trợ quý báu của Anh/Chị!</p>
+    <p style="margin-top:14px; font-size:.9rem; color:#1a4e8a; font-weight:600;">Thời gian hoàn thành: <span id="final-duration"></span></p>
+    <p style="margin-top:8px; font-size:.88rem; color:#555;">Thù lao <strong>10.000 VND</strong> sẽ được chuyển khoản đến tài khoản ngân hàng của Anh/Chị trong vòng <strong>3 ngày làm việc</strong> sau khi phần trả lời được xác nhận đạt điều kiện.</p>
+    <p style="margin-top:16px; font-size:.82rem; color:#bbb;">Respondent ID: <span id="resp-id"></span></p>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+// DESIGN DATA — 16 choice sets in 2 blocks of 8
+// From E2W_survey_design_FINAL.xlsx (blocked version)
+// ══════════════════════════════════════════════════════════════
+
+const BLOCKS = {
+  1: [
+    { id:1,  optA:{price:"22 triệu VND",subsidy:"10 triệu VND", opCost:"60 nghìn/tháng", range:"260 km",charging:"Sạc tại nhà (6,5 giờ)"},  optB:{price:"45 triệu VND",opCost:"250 nghìn/tháng",range:"300 km"} },
+    { id:2,  optA:{price:"22 triệu VND",subsidy:"10 triệu VND", opCost:"300 nghìn/tháng",range:"80 km", charging:"Đổi pin (5 phút)"},       optB:{price:"45 triệu VND",opCost:"250 nghìn/tháng",range:"300 km"} },
+    { id:3,  optA:{price:"22 triệu VND",subsidy:"Không trợ cấp",opCost:"60 nghìn/tháng", range:"260 km",charging:"Sạc tại nhà (6,5 giờ)"},  optB:{price:"45 triệu VND",opCost:"250 nghìn/tháng",range:"200 km"} },
+    { id:4,  optA:{price:"45 triệu VND",subsidy:"10 triệu VND", opCost:"60 nghìn/tháng", range:"260 km",charging:"Sạc tại nhà (2,5 giờ)"},  optB:{price:"20 triệu VND",opCost:"350 nghìn/tháng",range:"300 km"} },
+    { id:5,  optA:{price:"22 triệu VND",subsidy:"Không trợ cấp",opCost:"175 nghìn/tháng",range:"260 km",charging:"Đổi pin (5 phút)"},       optB:{price:"30 triệu VND",opCost:"350 nghìn/tháng",range:"200 km"} },
+    { id:6,  optA:{price:"22 triệu VND",subsidy:"Không trợ cấp",opCost:"300 nghìn/tháng",range:"80 km", charging:"Đổi pin (5 phút)"},       optB:{price:"45 triệu VND",opCost:"350 nghìn/tháng",range:"200 km"} },
+    { id:7,  optA:{price:"30 triệu VND",subsidy:"10 triệu VND", opCost:"175 nghìn/tháng",range:"260 km",charging:"Đổi pin (5 phút)"},       optB:{price:"20 triệu VND",opCost:"350 nghìn/tháng",range:"200 km"} },
+    { id:8,  optA:{price:"30 triệu VND",subsidy:"5 triệu VND",  opCost:"60 nghìn/tháng", range:"150 km",charging:"Sạc tại nhà (6,5 giờ)"},  optB:{price:"20 triệu VND",opCost:"350 nghìn/tháng",range:"300 km"} },
+  ],
+  2: [
+    { id:9,  optA:{price:"30 triệu VND",subsidy:"5 triệu VND",  opCost:"60 nghìn/tháng", range:"260 km",charging:"Sạc tại nhà (6,5 giờ)"},  optB:{price:"45 triệu VND",opCost:"250 nghìn/tháng",range:"200 km"} },
+    { id:10, optA:{price:"30 triệu VND",subsidy:"Không trợ cấp",opCost:"60 nghìn/tháng", range:"260 km",charging:"Sạc tại nhà (2,5 giờ)"},  optB:{price:"30 triệu VND",opCost:"350 nghìn/tháng",range:"200 km"} },
+    { id:11, optA:{price:"45 triệu VND",subsidy:"5 triệu VND",  opCost:"175 nghìn/tháng",range:"150 km",charging:"Đổi pin (5 phút)"},       optB:{price:"20 triệu VND",opCost:"350 nghìn/tháng",range:"300 km"} },
+    { id:12, optA:{price:"45 triệu VND",subsidy:"10 triệu VND", opCost:"175 nghìn/tháng",range:"150 km",charging:"Đổi pin (5 phút)"},       optB:{price:"20 triệu VND",opCost:"350 nghìn/tháng",range:"300 km"} },
+    { id:13, optA:{price:"30 triệu VND",subsidy:"10 triệu VND", opCost:"60 nghìn/tháng", range:"260 km",charging:"Sạc tại nhà (2,5 giờ)"},  optB:{price:"20 triệu VND",opCost:"350 nghìn/tháng",range:"200 km"} },
+    { id:14, optA:{price:"22 triệu VND",subsidy:"Không trợ cấp",opCost:"300 nghìn/tháng",range:"150 km",charging:"Đổi pin (5 phút)"},       optB:{price:"45 triệu VND",opCost:"250 nghìn/tháng",range:"200 km"} },
+    { id:15, optA:{price:"22 triệu VND",subsidy:"10 triệu VND", opCost:"60 nghìn/tháng", range:"80 km", charging:"Sạc tại nhà (6,5 giờ)"},  optB:{price:"30 triệu VND",opCost:"250 nghìn/tháng",range:"300 km"} },
+    { id:16, optA:{price:"22 triệu VND",subsidy:"10 triệu VND", opCost:"300 nghìn/tháng",range:"80 km", charging:"Đổi pin (5 phút)"},       optB:{price:"45 triệu VND",opCost:"250 nghìn/tháng",range:"200 km"} },
+  ]
+};
+
+const SETS_PER_BLOCK = 8;
+
+// ── State ────────────────────────────────────────────────
+const state = {
+  block: 0,           // assigned on start
+  demographics: {},
+  choices: {},        // keyed by local index 1-8
+  currentSet: 1,
+  respondentId: Date.now() + '-' + Math.random().toString(36).substr(2,6),
+  startTime: null,
+  timerInterval: null,
+};
+
+// ── Timer ────────────────────────────────────────────────
+function startTimer() {
+  if (state.startTime) return;
+  state.startTime = Date.now();
+  state.timerInterval = setInterval(function() {
+    var elapsed = Math.floor((Date.now() - state.startTime) / 1000);
+    var m = String(Math.floor(elapsed / 60)).padStart(2, '0');
+    var s = String(elapsed % 60).padStart(2, '0');
+    document.getElementById('timerDisplay').textContent = m + ':' + s;
+  }, 1000);
+}
+function stopTimer() { if (state.timerInterval) clearInterval(state.timerInterval); }
+function getDurationSeconds() { return state.startTime ? Math.floor((Date.now() - state.startTime) / 1000) : 0; }
+function formatDuration(sec) {
+  var m = Math.floor(sec / 60), s = sec % 60;
+  return m === 0 ? s + ' giây' : m + ' phút ' + s + ' giây';
+}
+
+// ── Block assignment: client-side randomization ──────────
+// Simple 50/50 random assignment. With n=250, the split will
+// be approximately 125/125 (deviation > 50 has < 0.001% chance).
+// Block is fixed in state before any questions are shown,
+// ensuring data integrity: responses always match the block label.
+
+var GAS_URL = 'https://script.google.com/macros/s/AKfycbwd6tydiLvbndDKwP2NR8-ZZcY39HmmEl96Errr9re6hFqWhAKWeiI8kBGGgjrIXqb9PQ/exec';
+
+function assignBlock() {
+  state.block = Math.random() < 0.5 ? 1 : 2;
+}
+
+function startSurvey() {
+  assignBlock();
+  startTimer();
+  goTo('sec-cbc');
+  renderCBC(1);
+}
+
+// ── Navigation ───────────────────────────────────────────
+function goTo(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+  updateProgress(id);
+}
+
+function updateProgress(sectionId) {
+  const labels = {
+    'sec-intro': 'Giới thiệu',
+    'sec-cbc':  'Phần 1: Lựa chọn - Tình huống ' + state.currentSet + ' / ' + SETS_PER_BLOCK,
+    'sec-demo': 'Phần 2: Thông tin chung',
+    'sec-thanks': 'Hoàn thành!',
+  };
+  let pct = 0;
+  if (sectionId === 'sec-cbc') pct = 5 + Math.round((state.currentSet - 1) / SETS_PER_BLOCK * 75);
+  else if (sectionId === 'sec-demo') pct = 85;
+  else if (sectionId === 'sec-thanks') pct = 100;
+  document.getElementById('progressBar').style.width = pct + '%';
+  document.getElementById('progressLabel').textContent = labels[sectionId] || '';
+}
+
+// ── Radio helpers ────────────────────────────────────────
+function selectRadio(groupId, el) {
+  document.querySelectorAll('#' + groupId + ' .radio-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+}
+function getRadioVal(groupId) {
+  const el = document.querySelector('#' + groupId + ' .radio-btn.selected');
+  return el ? el.dataset.val : '';
+}
+
+// ── CBC Rendering ────────────────────────────────────────
+function renderCBC(localIdx) {
+  state.currentSet = localIdx;
+  const sets = BLOCKS[state.block];
+  const cs = sets[localIdx - 1];
+  const selected = state.choices[localIdx] || '';
+  const pctDone = Math.round(((localIdx - 1) / SETS_PER_BLOCK) * 100);
+
+  const hasSwap = cs.optA.charging.indexOf('Đổi pin') >= 0;
+
+  const container = document.getElementById('cbc-container');
+  container.innerHTML =
+    '<div class="cbc-card">' +
+      '<h3>Phần 1 - Các tình huống lựa chọn</h3>' +
+      '<h2>Tình huống ' + localIdx + ' / ' + SETS_PER_BLOCK + '</h2>' +
+
+      '<div class="cbc-progress">' +
+        '<span>Tình huống ' + localIdx + ' / ' + SETS_PER_BLOCK + '</span>' +
+        '<span>' + pctDone + '% hoàn thành. Cố lên!</span>' +
+      '</div>' +
+      '<div class="cbc-progress-bar"><div class="cbc-progress-fill" style="width:' + pctDone + '%"></div></div>' +
+
+      '<div class="cbc-question">' +
+        'Hãy tưởng tượng bạn đang cân nhắc mua xe máy mới. Trong tình huống dưới đây, bạn sẽ chọn phương án nào?' +
+      '</div>' +
+
+      '<div class="options-grid">' +
+        // Option A — Electric
+        '<div class="option-card' + (selected==='A' ? ' selected' : '') + '" onclick="selectOption(' + localIdx + ',\'A\',this)">' +
+          '<div class="option-header">A - Xe máy điện</div>' +
+          attrRow('Giá mua (đã kèm pin)', cs.optA.price) +
+          attrRow('Trợ cấp chính phủ', cs.optA.subsidy) +
+          attrRow('Chi phí vận hành', cs.optA.opCost) +
+          attrRow('Quãng đường / lần sạc', cs.optA.range) +
+          attrRow('Phương thức sạc', cs.optA.charging) +
+          '<div class="check-circle"></div>' +
+        '</div>' +
+
+        // Option B — Gasoline
+        '<div class="option-card' + (selected==='B' ? ' selected' : '') + '" onclick="selectOption(' + localIdx + ',\'B\',this)">' +
+          '<div class="option-header">B - Xe máy xăng</div>' +
+          attrRow('Giá mua', cs.optB.price) +
+          attrRow('Trợ cấp chính phủ', 'Không trợ cấp') +
+          attrRow('Chi phí vận hành', cs.optB.opCost) +
+          attrRow('Quãng đường / bình xăng', cs.optB.range) +
+          attrRow('Tiếp nhiên liệu', 'Trạm xăng (5 phút)') +
+          '<div class="check-circle"></div>' +
+        '</div>' +
+
+        // Option C — Neither
+        '<div class="option-card option-c' + (selected==='C' ? ' selected' : '') + '" onclick="selectOption(' + localIdx + ',\'C\',this)">' +
+          '<div class="option-header">C - Không chọn</div>' +
+          '<div class="option-c-body"><span>Không chọn<br>phương tiện nào</span></div>' +
+          '<div class="check-circle"></div>' +
+        '</div>' +
+      '</div>' +
+
+      '<div id="err-choice" style="color:#c53030;font-size:.84rem;margin-top:10px;display:none;">Vui lòng chọn một phương án trước khi tiếp tục.</div>' +
+
+      // Footnotes
+      '<div class="cbc-footnotes">' +
+        '<div class="cbc-footnote">Chi phí vận hành được tính dựa trên quãng đường trung bình người dân sinh sống tại Hà Nội di chuyển trong 1 tháng là <strong>650 km</strong>, giá xăng 25.000 VND/lít; đơn vị: nghìn VND.</div>' +
+        (hasSwap
+          ? '<div class="cbc-footnote">Một số dòng xe trên thị trường hiện nay được thiết kế với cục pin rời, có thể tháo ra, lắp vào thuận tiện và dễ dàng. Người dùng loại xe máy điện có pin tháo rời có thể đổi pin đã cạn để lấy pin đầy tại các tủ đổi pin. Thời gian đổi pin tại tủ đổi pin tương đương với thời gian đổ xăng tại trạm.</div>'
+          : '') +
+      '</div>' +
+
+      '<div class="nav-row">' +
+        '<button class="btn btn-secondary" onclick="prevCBC(' + localIdx + ')">Quay lại</button>' +
+        '<span style="font-size:.84rem;color:#999">' + localIdx + ' / ' + SETS_PER_BLOCK + '</span>' +
+        '<button class="btn btn-primary" id="next-btn" onclick="nextCBC(' + localIdx + ')">' +
+          (localIdx < SETS_PER_BLOCK ? 'Tiếp theo' : 'Tiếp tục sang Phần 2') +
+        '</button>' +
+      '</div>' +
+    '</div>';
+
+  updateProgress('sec-cbc');
+}
+
+function attrRow(label, value) {
+  return '<div class="attr-row">' +
+    '<span class="attr-label">' + label + '</span>' +
+    '<span class="attr-value">' + value + '</span>' +
+  '</div>';
+}
+
+function selectOption(localIdx, choice, el) {
+  document.querySelectorAll('.option-card').forEach(function(c) { c.classList.remove('selected'); });
+  el.classList.add('selected');
+  state.choices[localIdx] = choice;
+  var errEl = document.getElementById('err-choice');
+  if (errEl) errEl.style.display = 'none';
+}
+
+function prevCBC(localIdx) {
+  if (localIdx <= 1) goTo('sec-intro');
+  else { renderCBC(localIdx - 1); window.scrollTo(0,0); }
+}
+
+function nextCBC(localIdx) {
+  if (!state.choices[localIdx]) {
+    document.getElementById('err-choice').style.display = 'block';
+    return;
+  }
+  if (localIdx < SETS_PER_BLOCK) {
+    renderCBC(localIdx + 1);
+    window.scrollTo(0,0);
+  } else {
+    goTo('sec-demo');
+  }
+}
+
+// ── Demographics submit ──────────────────────────────────
+function submitDemo() {
+  var fields = [
+    { id:'gender',          errId:'err-gender' },
+    { id:'study_year',      errId:'err-study_year' },
+    { id:'residence',       errId:'err-residence' },
+    { id:'monthly_expense', errId:'err-monthly_expense' },
+    { id:'daily_distance',  errId:'err-daily_distance' },
+    { id:'main_transport',  errId:'err-main_transport' },
+    { id:'ev_experience',   errId:'err-ev_experience' },
+    { id:'purchase_intent', errId:'err-purchase_intent' },
+  ];
+  var valid = true;
+  fields.forEach(function(f) {
+    var val = getRadioVal(f.id);
+    var err = document.getElementById(f.errId);
+    if (!val) { err.style.display = 'block'; valid = false; }
+    else { err.style.display = 'none'; state.demographics[f.id] = val; }
+  });
+
+  // Validate bank fields
+  ['bank_name','bank_account','bank_holder'].forEach(function(fid) {
+    var val = document.getElementById(fid).value.trim();
+    var err = document.getElementById('err-' + fid);
+    if (!val) { err.style.display = 'block'; valid = false; }
+    else { err.style.display = 'none'; state.demographics[fid] = val; }
+  });
+
+  if (!valid) return;
+  submitSurvey();
+}
+
+// ── Build Payload ────────────────────────────────────────
+function buildPayload() {
+  var d = state.demographics;
+  var sets = BLOCKS[state.block];
+  var duration = getDurationSeconds();
+  var row = {
+    respondent_id:    state.respondentId,
+    timestamp:        new Date().toISOString(),
+    duration_seconds: duration,
+    duration_text:    formatDuration(duration),
+    block:            state.block,
+    gender:           d.gender || '',
+    study_year:       d.study_year || '',
+    residence:        d.residence || '',
+    monthly_expense:  d.monthly_expense || '',
+    daily_distance:   d.daily_distance || '',
+    main_transport:   d.main_transport || '',
+    ev_experience:    d.ev_experience || '',
+    purchase_intent:  d.purchase_intent || '',
+    bank_name:        d.bank_name || '',
+    bank_account:     d.bank_account || '',
+    bank_holder:      d.bank_holder || '',
+  };
+  // Map local choices (1-8) to actual set IDs
+  for (var i = 1; i <= SETS_PER_BLOCK; i++) {
+    var setId = sets[i - 1].id;
+    row['set' + setId] = state.choices[i] || '';
+  }
+  return row;
+}
+
+// ── Submit Survey ────────────────────────────────────────
+async function submitSurvey() {
+  stopTimer();
+  var btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin-circle"></span> Đang gửi...';
+
+  var payload = buildPayload();
+
   try {
-    const data = JSON.parse(e.postData.contents);
-    appendRow(data);
-    return ContentService
-      .createTextOutput(JSON.stringify({ status: 'ok' }))
-      .setMimeType(ContentService.MimeType.JSON);
+    await fetch(GAS_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
   } catch (err) {
-    return ContentService
-      .createTextOutput(JSON.stringify({ status: 'error', message: err.message }))
-      .setMimeType(ContentService.MimeType.JSON);
-  }
-}
-
-function doGet(e) {
-  return ContentService
-    .createTextOutput(JSON.stringify({ status: 'E2W Survey endpoint is live (16 sets, 2 blocks, timer + bank)' }))
-    .setMimeType(ContentService.MimeType.JSON);
-}
-
-function appendRow(data) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  let sheet = ss.getSheetByName(SHEET_NAME);
-
-  if (!sheet) {
-    sheet = ss.insertSheet(SHEET_NAME);
-    sheet.appendRow(HEADERS);
-    const headerRange = sheet.getRange(1, 1, 1, HEADERS.length);
-    headerRange.setFontWeight('bold');
-    headerRange.setBackground('#1a4e8a');
-    headerRange.setFontColor('#ffffff');
-    sheet.setFrozenRows(1);
+    console.warn('Submission error (may still succeed with no-cors):', err);
   }
 
-  if (sheet.getLastRow() === 0) {
-    sheet.appendRow(HEADERS);
-  }
-
-  const row = HEADERS.map(h => (data[h] !== undefined ? data[h] : ''));
-  sheet.appendRow(row);
+  document.getElementById('resp-id').textContent = state.respondentId;
+  document.getElementById('final-duration').textContent = formatDuration(getDurationSeconds());
+  goTo('sec-thanks');
 }
+</script>
+</body>
+</html>
